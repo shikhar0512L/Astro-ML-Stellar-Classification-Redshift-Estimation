@@ -1,86 +1,182 @@
 # 🌌 Astro-ML: Stellar Classification & Redshift Estimation
 
-## 📖 What is this project? (From Scratch)
-Imagine looking up at the night sky. There are billions of stars, galaxies, and mysterious objects called Quasars. Telescopes like NASA's SDSS (Sloan Digital Sky Survey) take pictures of these objects and record how much light they emit in different colors. 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shikhar0512L/Astro-ML-Stellar-Classification-Redshift-Estimation/blob/main/AstroML.ipynb)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3%2B-orange.svg)](https://scikit-learn.org/)
+[![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-green.svg)](https://xgboost.readthedocs.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Because there are millions of these objects, humans cannot look at every single one and say, *"This is a star"* or *"This is a galaxy."* 
-
-**This project uses Artificial Intelligence (Machine Learning) to automate this process.** 
-We feed the AI the "colors of light" (data) from 100,000 space objects. The AI learns the patterns and does two things:
-1. **Classification:** Tells us exactly what the object is (Star, Galaxy, or Quasar).
-2. **Regression:** Predicts the exact distance of the object from Earth (measured by something called "Redshift").
-
-This repository is a complete, step-by-step Jupyter Notebook that explains everything from scratch, including the successes, the failures, and the scientific limits of AI.
+A machine learning pipeline that classifies celestial objects (Stars, Galaxies, Quasars) from SDSS photometric data and attempts to predict their exact **Redshift**. The notebook documents not only the successes but also the **scientific limits** of photometric-only regression — including data leakage, the extrapolation ceiling, and the failure modes of naive feature engineering.
 
 ---
 
-## 🧠 Core Concepts Explained (For Beginners)
+## 📖 What is this project?
 
-Before looking at the code, here is what you need to know:
-*   **What is Redshift?** As the universe expands, objects move away from us. As they move away, their light stretches and turns red. The higher the Redshift number, the farther away (and older) the object is.
-*   **Photometric Data (What we used):** This is like looking at an object through 5 broad colored glass filters (`u`, `g`, `r`, `i`, `z` bands). It's fast but not very detailed.
-*   **Spectroscopic Data (What we didn't use):** This is splitting the light into a detailed rainbow (thousands of specific wavelengths). It's highly accurate but very slow to capture.
-*   **Data Leakage:** A beginner mistake where you accidentally give the AI the "answer key" during training. We specifically fixed this in the code.
+Telescopes like the Sloan Digital Sky Survey (SDSS) observe hundreds of millions of celestial objects and record how much light they emit across different color bands. Manually labelling each object is impossible, so this project trains machine learning models to do it automatically.
 
----
+The pipeline tackles two tasks:
 
-## 🛠️ Tech Stack & Libraries
-Here is exactly what we used and why:
-*   **Python:** The programming language.
-*   **Pandas:** Used to load the massive CSV file and clean the data (like finding missing values).
-*   **Matplotlib & Seaborn:** Used to draw charts and the "Confusion Matrix" to see where the AI made mistakes.
-*   **Scikit-Learn:** The main Machine Learning library. We used it for `RandomForestClassifier`, `MLPRegressor` (Neural Network), `StandardScaler` (scaling numbers so the AI doesn't get confused by big vs small numbers), and `train_test_split` (splitting data into 80% for studying and 20% for an exam).
-*   **XGBoost:** The "Hedge Fund algorithm," known for being extremely fast and accurate on tabular data.
-*   **Google Colab:** The cloud platform used to run the code for free.
+1. **Classification** — Identify the object type: `STAR`, `GALAXY`, or `QSO` (Quasar).
+2. **Regression** — Predict the object's **Redshift**, a proxy for cosmological distance and age.
+
+Everything is contained in a single, self-documenting Jupyter notebook that explains each concept from first principles — including where the models break and why.
 
 ---
 
-## 🚀 Phase 1: The Classification (Success)
+## 🧠 Core Concepts (Quick Glossary)
 
-### The Goal
-To teach the AI to look at the 5 light bands (`u, g, r, i, z`) and predict if the object is a **STAR**, **GALAXY**, or **QSO (Quasar)**.
-
-### How we did it
-1.  **Data Cleaning:** We dropped useless columns like `obj_ID` (just a serial number) and `MJD` (dates).
-2.  **Scaling:** We used `StandardScaler` to make sure all the light values were on a similar scale.
-3.  **The Algorithm:** We used a **Random Forest Classifier**. Imagine this as 100 different people (Decision Trees) looking at the data, making a guess, and then voting on the final answer.
-
-### The Result
-*   **97.73% Accuracy!** The AI was incredibly accurate.
-*   **The Confusion Matrix:** When we visualized the results, we saw the AI sometimes confused a Quasar with a Galaxy. *Why?* Because a Quasar is actually a supermassive black hole eating a galaxy. Their light looks very similar to the AI! This is scientifically accurate.
+| Term | Meaning |
+|---|---|
+| **Redshift** | As the universe expands, light from distant objects stretches toward red. Higher redshift → farther and older object. |
+| **Photometric data** | Brightness measured through 5 broad filters (`u, g, r, i, z`). Fast to capture, low resolution. |
+| **Spectroscopic data** | Full wavelength-by-wavelength light split. Highly accurate, very slow. |
+| **Data leakage** | Accidentally feeding the model the target column during training. Fixed explicitly in this project. |
+| **Extrapolation ceiling** | Tree-based models cannot predict values outside the range seen during training. |
 
 ---
 
-## 📉 Phase 2: The Regression (The Brutal Reality)
+## 🏆 Results at a Glance
 
-### The Goal
-To predict the exact **Redshift number** (e.g., 0.543, 2.1, 5.6). This is much harder than classification because we are predicting a continuous number, not just a category.
+| Model | Task | Key Metric |
+|---|---|---|
+| Random Forest Classifier | Classification | **97.73% accuracy** |
+| MLPRegressor (Neural Net) | Redshift regression | $R^2 = 0.4187$ · $\text{MSE} = 0.3073$ |
+| XGBoost Regressor | Redshift regression | $R^2 = 0.4098$ · $\text{MSE} = 0.3121$ |
+| XGBoost + Feature Engineering + Sample Weights | Redshift regression | $R^2 = 0.1295$ · $\text{MSE} = 0.4603$ |
 
-### The Crucial Mistake We Fixed (Data Leakage)
-In our first attempt, our model got a perfect R2 score of 1.0 (100% accuracy). We quickly realized we made a mistake: we accidentally left the `redshift` column inside the input features. The AI was literally just reading the answer off the answer key!
-**Fix:** We dropped the `redshift` column from the inputs (`X`) and made it the target (`y`). The score dropped to a realistic level.
-
-### The Models We Tested & Why They Failed
-1.  **Random Forest Regressor:** It failed to predict any Redshift higher than ~2.5. *Why?* Because a Decision Tree physically cannot guess a number higher than the highest number it saw in training. 90% of our data was low-redshift. So, it just guessed around 1.5 for everything.
-2.  **Neural Network (MLPRegressor):** This is an "Artificial Brain." We gave it 2 hidden layers (100, 50). It predicted negative Redshift values (which is impossible in physics!) and performed poorly on high redshifts.
-3.  **XGBoost:** We brought out the "Hedge Fund King." It built 200 trees sequentially, learning from mistakes. It was fast, but it still hit the same "extrapolation ceiling." It couldn't guess what it hadn't seen.
-
-### The Final Experiment (Feature Engineering & Over-correction)
-To fix this, we did two advanced things:
-1.  **Feature Engineering:** We created new "Color Indices" by subtracting the light bands (e.g., `u-g`, `g-r`). Astronomers do this to find hidden signatures in the light.
-2.  **Sample Weighting:** We told the AI, *"If you see a high Redshift (>2.0), it is rare, so pay 10x more attention to it."*
-
-**The Result:** A disaster. The model **over-corrected**. It became so paranoid about missing high redshifts that it started hallucinating high redshifts for normal galaxies. The R2 score crashed to 0.13.
+> **TL;DR** — Classification is essentially solved. Regression hits a hard scientific ceiling (~redshift 2.5) because photometric features do not carry enough information to resolve high-redshift objects. Forcing the model to care about Quasars causes catastrophic over-correction.
 
 ---
 
-## 🏁 Final Conclusion & The Scientific Limit
+## 📂 Repository Structure
 
-Why did all these powerful algorithms fail to predict high redshifts accurately? 
-
-**Answer:** Because we used **Photometric Data** (5 broad colors). 
-Trying to predict the exact distance of a Quasar using just 5 broad colors is like trying to guess a person's exact weight by only looking at their shoe size. The clues are not rich enough. 
-
-To break the ~2.5 Redshift ceiling, we cannot use CSV data. We must move to **Spectroscopic FITS files** (raw, detailed light waves). And to analyze raw waves, we need a completely different type of AI called **1D-CNNs (1D Convolutional Neural Networks)**.
+```
+.
+├── AstroML.ipynb                # Full pipeline: EDA → classification → regression → conclusion
+├── star_classification.csv      # SDSS dataset (~100,000 objects, 18 columns)
+├── README.md
+├── requirements.txt
+└── LICENSE
+```
 
 ---
+
+## 🚀 How to Run
+
+**Option 1 — Google Colab (recommended)**
+
+Click the "Open in Colab" badge above, then `Runtime → Run all`. The dataset is fetched from a remote URL, so no local setup is needed.
+
+**Option 2 — Local**
+
+```bash
+git clone https://github.com/shikhar0512L/Astro-ML-Stellar-Classification-Redshift-Estimation.git
+cd Astro-ML-Stellar-Classification-Redshift-Estimation
+pip install -r requirements.txt
+jupyter notebook AstroML.ipynb
+```
+
+---
+
+## 🛠️ Tech Stack
+
+- **Python 3.10+**
+- **Pandas / NumPy** — data loading, cleaning, feature engineering
+- **Scikit-learn** — `RandomForestClassifier`, `MLPRegressor`, `StandardScaler`, `train_test_split`, metrics
+- **XGBoost** — gradient-boosted regression baseline
+- **Matplotlib / Seaborn** — confusion matrix, residual plots
+- **Google Colab** — execution environment
+
+---
+
+## ✅ Phase 1: Classification (Success)
+
+**Goal:** Predict `STAR` / `GALAXY` / `QSO` from the 5 photometric bands.
+
+**Approach:**
+- Dropped non-predictive ID columns (`obj_ID`, `run_ID`, `MJD`, `plate`, etc.)
+- Standardized all features with `StandardScaler`
+- Encoded the target with `LabelEncoder`
+- Trained a **Random Forest Classifier** (100 trees, voting ensemble)
+- 80/20 train-test split
+
+**Result:** **97.73% accuracy**
+
+The confusion matrix shows the model occasionally confuses **Quasars with Galaxies** — which is scientifically expected, since quasars are active galactic nuclei embedded within galaxies and their photometric signatures overlap heavily.
+
+---
+
+## 📉 Phase 2: Regression — The Redshift Bottleneck
+
+**Goal:** Predict the exact numerical redshift value for each object.
+
+### 🔧 The Data Leakage Fix
+
+The first regression attempt reported a suspiciously perfect $R^2 = 1.0$. Root cause: the `redshift` column was still present in the input features $X$ — the model was literally reading the answer key.
+
+**Fix:** Explicitly dropped `redshift` and `class` from $X$. The realistic $R^2$ then dropped to ~0.42, which is the honest baseline for this dataset.
+
+### 🧪 Models Tested
+
+| Model | Result | Why It Failed |
+|---|---|---|
+| **MLPRegressor** `(100, 50)` | $R^2 = 0.42$ | Predicted physically impossible **negative redshifts**; high variance near the ceiling. |
+| **XGBoost Regressor** `(200 trees, depth 6)` | $R^2 = 0.41$ | Same extrapolation ceiling as any tree-based model. |
+| **XGBoost + Color Indices + Sample Weights** | $R^2 = 0.13$ | **Over-correction** — the $10\times$ penalty on high-redshift samples caused the model to hallucinate high redshifts for normal galaxies. |
+
+### 📊 The Extrapolation Ceiling
+
+All tree-based models flatline at **redshift ≈ 2.5** because:
+
+- 90% of the dataset is low-redshift.
+- A decision tree physically cannot output a value higher than the maximum seen in training.
+- The model optimizes for MSE, so "guess 1.5 for everything" is near-optimal for 90% of the data — at the cost of completely missing Quasars.
+
+Feature engineering (color indices `u-g`, `g-r`, `r-i`, `i-z`) and sample weighting were applied as a corrective, but they **made the model worse**, not better — a clean demonstration that when the data is information-poor, more aggressive training makes things worse, not better.
+
+---
+
+## 🏁 Scientific Conclusion
+
+The failure is not a modelling failure — it is a **data limitation**.
+
+Predicting precise redshift from 5 broad photometric bands is analogous to guessing a person's exact weight from their shoe size. The signal is simply not present in the features.
+
+To break the redshift ≈ 2.5 ceiling, the pipeline must move from **photometric CSV data** to **spectroscopic FITS data**, and from **tabular models** to **1D Convolutional Neural Networks**, which are designed to find patterns in continuous signals like light spectra.
+
+This is the point where the project transitions from a tabular ML problem into a domain-specific astrophysics ML problem.
+
+---
+
+## 🗺️ Roadmap — Phase 2
+
+- [ ] Ingest spectroscopic FITS files from SDSS DR18
+- [ ] Build a preprocessing pipeline for raw 1D spectra
+- [ ] Train a 1D-CNN for redshift regression
+- [ ] Benchmark against template-fitting baselines (e.g. Redrock)
+- [ ] Add per-class error analysis (Star vs Galaxy vs QSO)
+- [ ] Deploy an interactive inference demo (Gradio / Streamlit)
+
+
+---
+
+## 📦 Dataset
+
+- **Source:** [SDSS Stellar Classification Dataset](https://raw.githubusercontent.com/dannycab/MSU_REU_ML_course/main/activities/data/star_classification.csv) — 100,000 rows, 18 columns.
+- The notebook loads the CSV directly from a remote URL, so the file is optional for reproduction. It is included in this repository for archival completeness.
+
+---
+
+## 📜 License
+
+Released under the [MIT License](LICENSE).
+
+---
+
+## 👤 Author
+
+**Shikhar Singh**  
+B.Tech CSE (AI & ML) — KIIT University  
+[GitHub](https://github.com/shikhar0512L)
+
+If this project helped you understand ML extrapolation limits or photometric redshift estimation, consider giving it a ⭐.
